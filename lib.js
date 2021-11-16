@@ -60,7 +60,7 @@ function createOutputFile(api, log) {
     //Write swagger
     log.verbose('write swagger json file: ' + app.options.dest + 'swagger.json');
     if (!app.options.simulate)
-        fs.writeFileSync(app.options.dest + './swagger.json', api.swaggerData);
+        fs.writeFileSync(app.options.dest + '/swagger.json', api.swaggerData);
 
 }
 

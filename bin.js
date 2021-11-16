@@ -12,10 +12,10 @@
 // cheese: stilton
 
 // const commander = require('commander'); // (normal include)
-const commander = require('commander'); // include commander in git clone of commander repo
-const program = new commander.Command();
+const { Command } = require('commander'); // include commander in git clone of commander repo
+const program = new Command();
 
-var argv = program
+program
     .option('-f --file-filters <file-filters>', 'RegEx-Filter to select files that should be parsed (multiple -f can be used).', collect, [])
 
     .option('-e, --exclude-filters <exclude-filters>', 'RegEx-Filter to select files / dirs that should not be parsed (many -e can be used).', collect, [])
@@ -48,8 +48,9 @@ var argv = program
 
 program.parse(process.argv);
 
-const { parsee } = program
+var argv = program.opts();
 
+const { parsee } = program
 
 const options = {
     excludeFilters: ['apidoc\\.config\\.js$'].concat(argv.excludeFilters.length ? argv.excludeFilters : []),
