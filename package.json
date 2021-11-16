@@ -1,0 +1,38 @@
+{
+    "name": "apidoc-swagger-3",
+    "version": "1.0.5",
+    "description": "Convert api doc json to swagger3 json",
+    "author": "amano hikaru",
+    "main": "bin.js",
+    "bin": "bin.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/amanoooo/apidoc-swagger-3"
+    },
+    "bugs": {
+        "url": "https://github.com/amanoooo/apidoc-swagger-3/issues"
+    },
+    "keywords": [
+        "api",
+        "apidoc",
+        "doc",
+        "documentation",
+        "swagger",
+        "swagger-3.0"
+    ],
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "license": "ISC",
+    "dependencies": {
+        "apidoc-core": "^0.12.0",
+        "commander": "^6.0.0",
+        "generate-schema": "^2.6.0",
+        "lodash": "^4.17.20",
+        "path-to-regexp": "^6.1.0",
+        "winston": "^3.3.3"
+    },
+    "peerDependencies": {
+        "typescript": "^3.8.7"
+    }
+}
