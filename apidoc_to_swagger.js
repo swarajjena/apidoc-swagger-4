@@ -5,7 +5,7 @@ const GenerateSchema = require('generate-schema')
 
 
 var swagger = {
-    swagger: "3.0",
+    swagger: "2.0",
     info: {},
     paths: {}
 };
@@ -13,6 +13,8 @@ var swagger = {
 function toSwagger(apidocJson, projectJson) {
     swagger.info = addInfo(projectJson);
     swagger.paths = extractPaths(apidocJson);
+    console.log(swagger.paths[0])
+    console.log("\n\n\n\n\n\n\n\n\n\n\n")
     // for (const key in swagger) {
     //     console.log('[%s] %o', key, swagger[key]);
     // }
@@ -63,8 +65,14 @@ function extractPaths(apidocJson) {
 
             var obj = paths[url] = paths[url] || {};
 
-            _.extend(obj, generateProps(verb))
+            try {
+                _.extend(obj, generateProps(verb, pathKeys))
+            } catch (err) {
+                console.warn("Warn : Invalid APIDOC syntax in", verb.filename)
+            }
+
         }
+
     }
     return paths;
 }
@@ -79,6 +87,19 @@ function mapHeaderItem(i) {
         default: i.defaultValue
     }
 }
+
+function mapUrlItem(i) {
+    return {
+        type: 'string',
+        in: 'path',
+        name: i.field,
+        description: removeTags(i.description),
+        required: !i.optional,
+        default: i.defaultValue
+    }
+}
+
+
 function mapQueryItem(i) {
     return {
         type: 'string',
@@ -173,15 +194,15 @@ function transferApidocParamsToSwaggerBody(apiDocParams, parameterInBody) {
 
     return parameterInBody
 }
-function generateProps(verb) {
+function generateProps(verb, pathKeys) {
     // console.log('verb', verb);
 
     const pathItemObject = {}
-    const parameters = generateParameters(verb)
+    const parameters = generateParameters(verb, pathKeys)
     const responses = generateResponses(verb)
     pathItemObject[verb.type] = {
         tags: [verb.group],
-        summary: removeTags(verb.name),
+        summary: verb.title ? removeTags(verb.title) : removeTags(verb.name),
         description: removeTags(verb.title),
         consumes: [
             "application/json"
@@ -197,29 +218,48 @@ function generateProps(verb) {
 
 }
 
-function generateParameters(verb) {
+function generateParameters(verb, pathKeys) {
+    const mixedUrl = []
     const mixedQuery = []
     const mixedBody = []
     const header = verb && verb.header && verb.header.fields.Header || []
 
     if (verb && verb.parameter && verb.parameter.fields) {
 
+        const UrlParameter = verb.parameter.fields.Url || verb.parameter.fields.Param || verb.parameter.fields.Params || []
         const Parameter = verb.parameter.fields.Parameter || []
+
+        const _others = []
+
+        Parameter.forEach(param => {
+            if (pathKeys.includes(param.field)) {
+                UrlParameter.push(param)
+            } else {
+                _others.push(param)
+            }
+        })
+
         const _query = verb.parameter.fields.Query || []
         const _body = verb.parameter.fields.Body || []
+
+        mixedUrl.push(...UrlParameter)
+
         mixedQuery.push(..._query)
-        mixedBody.push(..._body)
+        mixedQuery.push(..._others)
         if (verb.type === 'get') {
-            mixedQuery.push(...Parameter)
+            mixedQuery.push(..._body)
         } else {
-            mixedBody.push(...Parameter)
+            mixedBody.push(..._body)
+            // mixedBody.push(...Parameter)
         }
     }
 
     const parameters = []
+    parameters.push(...mixedUrl.map(mapUrlItem))
     parameters.push(...mixedQuery.map(mapQueryItem))
     parameters.push(...header.map(mapHeaderItem))
-    parameters.push(generateRequestBody(verb, mixedBody))
+    if (mixedBody.length > 0)
+        parameters.push(generateRequestBody(verb, mixedBody))
     // console.log('parameters', parameters);
 
     return parameters
@@ -231,7 +271,8 @@ function generateRequestBody(verb, mixedBody) {
             properties: {},
             type: 'object',
             required: []
-        }
+        },
+        name: "payload"
     }
 
     if (_.get(verb, 'parameter.examples.length') > 0) {
