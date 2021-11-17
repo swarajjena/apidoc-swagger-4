@@ -33,6 +33,14 @@ function main(options) {
     const { src, dest, verbose } = options
     apidoc.setLogger(app.options.log)
 
+    let configFile = options.config;
+    let initialConfig = {}
+    if (configFile && fs.existsSync(configFile)) {
+        let configFileContents = fs.readFileSync(configFile, { encoding: 'utf8', flag: 'r' });
+        initialConfig = JSON.parse(configFileContents);
+        apidoc.setPackageInfos(initialConfig)
+    }
+
     var api = apidoc.parse({ ...app.options, log: app.options.log })
 
     if (app.options.parse !== true) {

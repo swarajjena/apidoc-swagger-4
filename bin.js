@@ -70,6 +70,8 @@ const options = {
     silent: argv.silent,
     simulate: argv.simulate,
     sample: argv.sample,
+
+    config: argv.config
 }
 
 /**
