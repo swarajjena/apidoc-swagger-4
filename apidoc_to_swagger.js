@@ -13,6 +13,7 @@ var swagger = {
 function toSwagger(apidocJson, projectJson) {
     swagger.info = addInfo(projectJson);
     swagger.paths = extractPaths(apidocJson);
+    swagger.tags = projectJson.groups || [];
     console.log(swagger.paths[0])
     console.log("\n\n\n\n\n\n\n\n\n\n\n")
     // for (const key in swagger) {
@@ -203,7 +204,7 @@ function generateProps(verb, pathKeys) {
     pathItemObject[verb.type] = {
         tags: [verb.group],
         summary: verb.title ? removeTags(verb.title) : removeTags(verb.name),
-        description: removeTags(verb.title),
+        description: verb.description ? removeTags(verb.description) : "",
         consumes: [
             "application/json"
         ],
@@ -363,7 +364,13 @@ function createNestedName(field, defaultObjectName) {
 }
 
 function groupByUrl(apidocJson) {
+    let order = { "get": 1, "post": 2, "put": 3, "delete": 4 }
+    apidocJson = apidocJson.map(a => {
+        a.order = order[a.type]
+        return a
+    })
     return _.chain(apidocJson)
+        .sortBy("order")
         .groupBy("url")
         .toPairs()
         .map(function (element) {
