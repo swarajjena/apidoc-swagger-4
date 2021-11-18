@@ -305,6 +305,18 @@ function generateResponses(verb) {
         for (const example of success.examples) {
             const { code, json } = safeParseJson(example.content)
             const schema = GenerateSchema.json(example.title, json)
+
+            const properties = schema.properties;
+            for (let prop in properties) {
+                let propSchema = properties[prop];
+                if (propSchema.items && propSchema.items.type === "array") {
+                    let innerSchema = GenerateSchema.json(prop, json[prop][0]);
+
+                    propSchema.items.items = innerSchema.items;
+                }
+            }
+
+
             responses[code] = { schema, description: example.title }
         }
 
@@ -328,8 +340,12 @@ function mountResponseSpecSchema(verb, responses) {
 function safeParseJson(content) {
     // such as  'HTTP/1.1 200 OK\n' +  '{\n' + ...
     const leftCurlyBraceIndex = content.indexOf('{')
-    const mayCodeString = content.slice(0, leftCurlyBraceIndex)
-    const mayContentString = content.slice(leftCurlyBraceIndex)
+    const leftSquareBraceIndex = content.indexOf('[')
+
+    const startingPoint = content.length > 0 && content.trim()[0] === '[' ? leftSquareBraceIndex : leftCurlyBraceIndex;
+
+    const mayCodeString = content.slice(0, startingPoint)
+    const mayContentString = content.slice(startingPoint)
 
     const mayCodeSplit = mayCodeString.trim().split(' ')
     const code = mayCodeSplit.length === 3 ? parseInt(mayCodeSplit[1]) : 200
